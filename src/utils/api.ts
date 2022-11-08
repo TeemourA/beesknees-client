@@ -1,9 +1,9 @@
 import { localStorageTokenName } from '../constants';
 
 export const getBaseUrl = () => {
-  if (process.env.REACT_APP_MODE !== 'development') return;
+  if (process.env.REACT_APP_MODE === 'development') return process.env.API_DEV_ORIGIN;
 
-  return 'http://localhost:3000';
+  return process.env.API_PROD_ORIGIN;
 };
 
 export const getCurrentSessionToken = () => {
