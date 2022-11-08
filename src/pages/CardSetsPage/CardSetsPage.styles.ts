@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-export const AppContainer = styled.div`
+export const PageContainer = styled.div`
   display: grid;
   width: 100%;
 `;
