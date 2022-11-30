@@ -2,7 +2,6 @@ import { PayloadAction } from '@reduxjs/toolkit';
 import { call, put, takeLatest } from 'redux-saga/effects';
 
 import axios from '../../api';
-import { getCurrentSessionToken } from '../../utils/api';
 import { createSessionAPI, terminateSessionAPI } from '../../api/session.api';
 import {
   createSessionRequest,

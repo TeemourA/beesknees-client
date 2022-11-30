@@ -3,6 +3,7 @@ import { RequestStatuses } from '../../interface/network';
 export interface CardSetData {
   title: string;
   url: string;
+  price: string;
 }
 
 export interface CardSet extends CardSetData {

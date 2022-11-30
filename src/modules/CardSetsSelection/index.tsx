@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/typedRedux';
 
 import { fetchCardSetsRequest } from '../../features/cardSets/cardSets.slice';
@@ -18,8 +18,12 @@ import {
 const CardSetsSelection: React.FC<any> = () => {
   const [selectedCardSets, setSelectedCardSets] = useState<CardSet[]>([]);
   const [message, setMessage] = useState<string>('');
+  const [searchedSet, setSearchedSet] = useState<string>('');
 
   const cardSets = useAppSelector(cardSetsListSelector);
+  const searchedCardSets = useAppSelector(cardSetsListSelector).filter(
+    ({ title }) => title.toLowerCase().includes(searchedSet)
+  );
   const status = useAppSelector(cardSetsStatusSelector);
 
   const dispatch = useAppDispatch();
@@ -37,8 +41,32 @@ const CardSetsSelection: React.FC<any> = () => {
     });
   };
 
-  const handleSelectAllCardSets = () =>
-    cardSets.forEach((set) => handleCardSetSelect(set));
+  const handleSelectAllCardSets = () => {
+    const isNotAllSelected = selectedCardSets.length < cardSets.length;
+
+    if (isNotAllSelected) {
+      const notSelected = cardSets.filter(
+        (set) => !selectedCardSets.includes(set)
+      );
+      notSelected.forEach((set) => handleCardSetSelect(set));
+    } else {
+      cardSets.forEach((set) => handleCardSetSelect(set));
+    }
+  };
+  const handleSearchedSetChange = ({
+    target: { value },
+  }: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchedSet(value.toLowerCase().trim());
+  };
+
+  const selectedCardSetsTotalPrice = useMemo(
+    () =>
+      selectedCardSets.reduce(
+        (sum, { price }) => (price ? sum + Number(price) : sum),
+        0
+      ),
+    [selectedCardSets]
+  );
 
   useEffect(() => {
     setMessage(
@@ -50,9 +78,10 @@ const CardSetsSelection: React.FC<any> = () => {
 
   useEffect(() => {
     dispatch(fetchCardSetsRequest());
-  }, []);
+  }, [dispatch]);
 
-  if (!cardSets.length && status === RequestStatuses.loaded) return <div>No card sets found</div>;
+  if (!cardSets.length && status === RequestStatuses.loaded)
+    return <div>No card sets found</div>;
 
   return (
     <>
@@ -61,11 +90,21 @@ const CardSetsSelection: React.FC<any> = () => {
       ) : (
         <>
           <p>Available card sets</p>
-          <CardSetsSelectionButton onClick={handleSelectAllCardSets}>
+          <input
+            type="text"
+            value={searchedSet}
+            placeholder="Search set"
+            onChange={handleSearchedSetChange}
+            style={{ marginTop: '15px', marginBottom: '15px' }}
+          />
+          <CardSetsSelectionButton
+            onClick={handleSelectAllCardSets}
+            style={{ marginBottom: '15px' }}
+          >
             Select all
           </CardSetsSelectionButton>
           <CardSetsSelectionList>
-            {cardSets.map((set) => (
+            {searchedCardSets.map((set) => (
               <li key={set._id}>
                 <label>
                   <input
@@ -76,6 +115,8 @@ const CardSetsSelection: React.FC<any> = () => {
                   <a href={set.url} rel="noreferrer" target="_blank">
                     {set.title}
                   </a>
+                  {' | '}
+                  <span>{set?.price}₽</span>
                 </label>
               </li>
             ))}
@@ -86,6 +127,7 @@ const CardSetsSelection: React.FC<any> = () => {
         <p>Select a card set to generate a message</p>
       ) : (
         <div style={{ marginTop: '10px' }}>
+          <div>Total for selected sets: {selectedCardSetsTotalPrice}₽</div>
           <textarea cols={40} rows={10} value={message} />
           <button onClick={() => navigator.clipboard.writeText(message.trim())}>
             Copy to clipboard
